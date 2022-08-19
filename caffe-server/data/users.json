@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "username": "Owner",
+        "email": "owner@gmail.com",
+        "password": "owner123",
+        "role": "Owner"
+    },
+    {
+        "id": 2,
+        "username": "Admin",
+        "email": "admin@gmail.com",
+        "password": "admin123",
+        "role": "Admin"
+    },
+    {
+        "id": 3,
+        "username": "Cashier",
+        "email": "cashier@gmail.com",
+        "password": "cashier123",
+        "role": "Cashier"
+    }
+]
