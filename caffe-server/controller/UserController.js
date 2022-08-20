@@ -3,7 +3,15 @@ const { User, Profile } = require('../models/index')
 class UserController {
     static async readAllUser(req, res, next) {
         try {
-            const users = await User.findAll({ include: [Profile]});
+            const users = await User.findAll({
+                include: [
+                    {
+                        model: Profile,
+                        attributes: { exclude: ["createdAt", "updatedAt"]}
+                    }
+                ],
+                attributes: { exclude: ["password", "createdAt", "updatedAt"]}
+            });
 
             res.status(200).json({
                 message: "Success read users",
@@ -23,8 +31,7 @@ class UserController {
             await Profile.create({ user_id: newUser.id })
 
             res.status(201).json({ 
-                message: "Success create user",
-                user: newUser
+                message: `Success create user ${newUser.username}`,
             })
         } catch (error) {
             next(error)
@@ -33,7 +40,8 @@ class UserController {
 
     static async updateUser(req, res, next) {
         try {
-            const { username, email, password, role, fullName, dateOfBirth, gender, phoneNumber } = req.body
+            let { password } = req.body
+            const { username, email, role, fullName, dateOfBirth, gender, phoneNumber } = req.body
             const { id } = req.params
 
             let findUser = await User.findByPk(+id);
@@ -42,17 +50,19 @@ class UserController {
                 throw { name: "NotFound" }
             }
 
-            await User.update({ username, email, password, role }, { where: { id } });
+            if (!password) {
+                password = findUser.password
+            }
+
+            await User.update({ username, email, password, role }, { where: { id }, individualHooks: true });
             await Profile.update({ fullName, dateOfBirth, gender, phoneNumber }, { where: { user_id: id } })
             findUser = await User.findByPk(+id);
-            const profile = Profile.findOne({ where: { user_id: id }})
 
             res.status(200).json({
-                message: "Success update user",
-                user: findUser,
-                profile
+                message: `Success update user ${findUser.username}`,
             })
         } catch (error) {
+            console.log(error);
             next(error)
         }
     }
@@ -62,8 +72,13 @@ class UserController {
             const { id } = req.params
 
             const findUser = await User.findByPk(+id, {
-                include: [Profile],
-                attributes: {exclude: ['password']},
+                include: [
+                    {
+                        model: Profile,
+                        attributes: { exclude: ["createdAt", "updatedAt"]}
+                    }
+                ],
+                attributes: { exclude: ["password", "createdAt", "updatedAt"]}
             })
 
             if (!findUser) {
@@ -81,7 +96,15 @@ class UserController {
 
     static async profileUser(req, res, next) {
         try {
-            let user = await User.findByPk(+req.user.id);
+            let user = await User.findByPk(+req.user.id, {
+                include: [
+                    {
+                        model: Profile,
+                        attributes: { exclude: ["createdAt", "updatedAt"]}
+                    }
+                ],
+                attributes: { exclude: ["password", "createdAt", "updatedAt"]}
+            });
 
             if (!user) {
                 throw { name: "Not Found" }
@@ -100,16 +123,24 @@ class UserController {
         try {
             const { id } = req.params
             
-            const findProfileUser = await Profile.findOne({ where: { user_id: id } })
+            const findUser = await User.findByPk(+id, {
+                include: [
+                    {
+                        model: Profile,
+                        attributes: { exclude: ["createdAt", "updatedAt"]}
+                    }
+                ],
+                attributes: { exclude: ["password", "createdAt", "updatedAt"]}
+            })
 
-            if (!findProfileUser) {
+            if (!findUser) {
                 throw { name: "NotFound" }
             }
 
             await User.destroy({ where: { id } })
 
             res.status(200).json({
-                message: `Success delete ${findProfileUser.fullName}`
+                message: `Success delete ${findUser.username}`
             })
         } catch (error) {
             next(error)
