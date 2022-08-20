@@ -2,7 +2,15 @@ const { KitchenStore, RawMaterial } = require('../models/index')
 class KitchenStoreController {
     static async readAllKitchenStore(req, res, next) {
         try {
-            const kitchenStore = await KitchenStore.findAll({ include: RawMaterial })
+            const kitchenStore = await KitchenStore.findAll({
+                include: [
+                    {
+                        model: RawMaterial,
+                        attributes: { exclude: ["createdAt", "updatedAt"]}
+                    }
+                ],
+                attributes: { exclude: ["createdAt", "updatedAt"]}
+            })
     
             res.status(200).json({
                 message: "Success read food kitchen stores",
@@ -20,8 +28,7 @@ class KitchenStoreController {
             const newKitchenStore = await KitchenStore.create({ name, quantity, unit, stock })
 
             res.status(201).json({
-                message: "Success create kitchen store",
-                kitchenStore: newKitchenStore
+                message: `Success create ${newKitchenStore.name}`
             })
         } catch (error) {
             next(error)
@@ -32,7 +39,9 @@ class KitchenStoreController {
         try {
             const { id } = req.params
 
-            const findKitchenStore = await KitchenStore.findByPk(+id)
+            const findKitchenStore = await KitchenStore.findByPk(+id, {
+                attributes: { exclude: ["createdAt", "updatedAt"] }
+            })
 
             if (!findKitchenStore) {
                 throw { name: "NotFound" }
@@ -62,8 +71,7 @@ class KitchenStoreController {
             findKitchenStore = await KitchenStore.findByPk(+id)
 
             res.status(201).json({
-                message: "Success update kitchen store",
-                kitchenStore: findKitchenStore
+                message: `Success update ${findKitchenStore.name}`,
             })
         } catch (error) {
             next(error)
@@ -86,11 +94,9 @@ class KitchenStoreController {
                 message: `Success delete ${findKitchenStore.name}`
             })
         } catch (error) {
-            console.log(error);
             next(error)
         }
     }
-
 }
 
 module.exports = KitchenStoreController;
