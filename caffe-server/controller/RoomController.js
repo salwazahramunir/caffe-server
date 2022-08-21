@@ -2,7 +2,9 @@ const { Room } = require('../models/index')
 class RoomController {
     static async readAllRoom(req, res, next) {
         try {
-            const rooms = await Room.findAll()
+            const rooms = await Room.findAll({
+                attributes: { exclude: ["createdAt", "updatedAt"] }
+            })
 
             res.status(200).json({
                 message: "Success read rooms",
@@ -17,11 +19,16 @@ class RoomController {
         try {
             const { codeRoom, nameRoom, category, price, duration } = req.body
 
+            if (category === '0' || category === 0) {
+                res.status(400).json({
+                    message: "Category is required"
+                })
+            }
+
             const newRoom = await Room.create({ codeRoom, nameRoom, category, price, duration, isEmpty:true })
 
             res.status(201).json({
-                message: "Success create room",
-                room: newRoom
+                message: `Success create ${newRoom.nameRoom} room`,
             })
         } catch (error) {
             next(error)
@@ -32,7 +39,9 @@ class RoomController {
         try {
             const { id } = req.params
 
-            const findRoom = await Room.findByPk(+id)
+            const findRoom = await Room.findByPk(+id, {
+                attributes: { exclude: ["createdAt", "updatedAt"] }
+            })
 
             if (!findRoom) {
                 throw { name: "NotFound" }
@@ -62,8 +71,7 @@ class RoomController {
             findRoom = await Room.findByPk(+id)
 
             res.status(201).json({
-                message: "Success update room",
-                room: findRoom
+                message: `Success update ${findRoom.nameRoom} room`
             })
         } catch (error) {
             console.log(error);
